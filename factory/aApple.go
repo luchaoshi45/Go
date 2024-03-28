@@ -1,4 +1,4 @@
-package test
+package factory
 
 type AbstractApple interface {
 	Show()
