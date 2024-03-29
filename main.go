@@ -1,8 +1,9 @@
 package main
 
-import "Go/behavioral/test"
+import "Go/uml/test"
 
 func main() {
 	//test.Test()
-	test.TemplateMethod()
+	//test.TemplateMethod()
+	test.Test()
 }
