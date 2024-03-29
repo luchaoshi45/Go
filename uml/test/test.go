@@ -4,5 +4,5 @@ func Test() {
 	Association()
 	TwoWayAssociation()
 	SelfAssociation()
-	Aggregation()
+	Combination()
 }
