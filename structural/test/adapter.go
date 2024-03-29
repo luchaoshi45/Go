@@ -1,7 +1,7 @@
 package test
 
 import (
-	"Go/adapter"
+	"Go/structural/adapter"
 	"fmt"
 )
 

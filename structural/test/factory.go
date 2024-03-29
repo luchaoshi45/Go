@@ -1,6 +1,6 @@
 package test
 
-import "Go/factory"
+import "Go/structural/factory"
 
 func Factory() {
 	var appleFac factory.AbstractFactory

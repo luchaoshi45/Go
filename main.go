@@ -1,10 +1,8 @@
 package main
 
-import "Go/test"
+import "Go/behavioral/test"
 
 func main() {
-	//test.Factory()
-	//test.Proxy()
-	//test.Decorate()
-	test.Adapter()
+	//test.Test()
+	test.TemplateMethod()
 }

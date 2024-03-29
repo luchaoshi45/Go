@@ -1,7 +1,7 @@
 package test
 
 import (
-	"Go/proxy"
+	"Go/structural/proxy"
 	"fmt"
 	"sync"
 )

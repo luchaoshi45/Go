@@ -1,6 +1,6 @@
 package test
 
-import "Go/decorate"
+import "Go/structural/decorate"
 
 func Decorate() {
 	hwp := decorate.NewHuaWeiPhone("GB200")
