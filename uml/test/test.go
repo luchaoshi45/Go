@@ -7,4 +7,5 @@ func Test() {
 	Combination()
 	Dependencies()
 	Inheritance()
+	Realization()
 }
