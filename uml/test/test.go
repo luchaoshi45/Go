@@ -6,4 +6,5 @@ func Test() {
 	SelfAssociation()
 	Combination()
 	Dependencies()
+	Inheritance()
 }
