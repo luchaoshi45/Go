@@ -5,4 +5,5 @@ func Test() {
 	TwoWayAssociation()
 	SelfAssociation()
 	Combination()
+	Dependencies()
 }
