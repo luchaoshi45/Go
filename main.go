@@ -1,9 +1,7 @@
 package main
 
-import "Go/uml/test"
+import "Go/creative/test"
 
 func main() {
-	//test.Test()
-	//test.TemplateMethod()
 	test.Test()
 }
