@@ -42,8 +42,8 @@ tree -L 2
 └── structural
    ├── adapter
    ├── decorate
-  ├── facade
-  ├── factory
+   ├── facade
+   ├── factory
    ├── proxy
    └── test
 ```
