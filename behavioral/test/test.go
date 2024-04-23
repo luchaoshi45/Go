@@ -4,4 +4,5 @@ func Test() {
 	TemplateMethod()
 	Command()
 	Strategy()
+	Observer()
 }
