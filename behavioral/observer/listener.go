@@ -42,7 +42,6 @@ func (h *Hero) Fight(Beaten Listener, bxs Notifier) {
 }
 
 func (h *Hero) HandlerEvent() {
-	fmt.Println(h)
 	var signal *Event
 	for {
 		signal = <-h.Signal
