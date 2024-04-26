@@ -37,6 +37,7 @@ func Observer() {
 	go h6.HandlerEvent()
 
 	h2.Fight(h4, bxs)
+	h4.Fight(h2, bxs)
 
-	time.Sleep(time.Second)
+	time.Sleep(1000 * time.Second)
 }

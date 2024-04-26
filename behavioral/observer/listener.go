@@ -42,18 +42,21 @@ func (h *Hero) Fight(Beaten Listener, bxs Notifier) {
 }
 
 func (h *Hero) HandlerEvent() {
-	signal := <-h.Signal
-	fmt.Printf(signal.Msg)
-
-	// 是本人忽略
-	if signal.Beater == h || signal.Beaten == h {
-		fmt.Printf("|%s 忽略\n", h.GetName())
-	} else if signal.Beater.GetParty() == h.Party {
-		fmt.Printf("|%s 拍手叫好\n", h.Title())
-	} else {
-		fmt.Printf("|%s 要反击\n", h.Title())
+	fmt.Println(h)
+	var signal *Event
+	for {
+		signal = <-h.Signal
+		fmt.Printf(signal.Msg)
+		// 是本人 忽略
+		if signal.Beater == h || signal.Beaten == h {
+			fmt.Printf("|%s 忽略\n", h.GetName())
+		} else if signal.Beater.GetParty() == h.Party {
+			fmt.Printf("|%s 拍手叫好\n", h.Title())
+		} else {
+			fmt.Printf("|%s 要反击\n", h.Title())
+			//h.Fight(signal.Beater, signal.Notifier)
+		}
 	}
-
 }
 func (h *Hero) GetName() string {
 	return h.Name
