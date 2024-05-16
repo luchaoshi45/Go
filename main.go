@@ -1,6 +1,6 @@
 package main
 
-import "Go/behavioral/test"
+import "Go/OS/test"
 
 func main() {
 	test.Test()
