@@ -39,10 +39,10 @@ docker logs 97217674751d221031d0a95a9afd4a1c0439aaaba5f1b423e44263a2a46ec131
 #### minio 界面
 ###### 用户名：AKIAIOSFODNN7EXAMPLE
 ###### 密码：wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
-http://10.181.105.230:9000
-http://10.181.105.230:9001
-http://10.181.105.230:38259
+http://10.181.105.230:9000 <br>
+http://10.181.105.230:9001 <br>
+http://10.181.105.230:38259 <br>
 
-API: http://172.17.0.7:9000  http://127.0.0.1:9000
-WebUI: http://172.17.0.7:38259 http://127.0.0.1:38259
-Docs: https://min.io/docs/minio/linux/index.html
+API: http://172.17.0.7:9000  http://127.0.0.1:9000 <br>
+WebUI: http://172.17.0.7:38259 http://127.0.0.1:38259 <br>
+Docs: https://min.io/docs/minio/linux/index.html <br>
