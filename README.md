@@ -59,7 +59,7 @@ tree -L 2
     └── test
 ```
 
-### docker
+### Docker
 ```
 └── docker
    ├── minio
