@@ -1,7 +1,7 @@
 package test
 
 import (
-	"Go/creative/singleton"
+	"Go/designPatterns/creative/singleton"
 	"fmt"
 	"sync"
 )

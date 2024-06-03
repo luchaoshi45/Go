@@ -1,6 +1,6 @@
 package test
 
-import "Go/creative"
+import "Go/designPatterns/creative"
 
 // 逻辑层
 func LowCoupling() {

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"Go/structural/proxy"
+	"Go/designPatterns/structural/proxy"
 	"fmt"
 	"sync"
 )

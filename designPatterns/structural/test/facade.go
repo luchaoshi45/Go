@@ -1,6 +1,6 @@
 package test
 
-import "Go/structural/facade"
+import "Go/designPatterns/structural/facade"
 
 func Facade() {
 	hmp := facade.NewHomePlayerFacade()

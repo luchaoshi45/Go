@@ -1,6 +1,6 @@
 package test
 
-import "Go/behavioral/command"
+import "Go/designPatterns/behavioral/command"
 
 func Command() {
 	chef := new(command.Chef)

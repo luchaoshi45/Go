@@ -1,6 +1,6 @@
 package test
 
-import "Go/behavioral/strategy"
+import "Go/designPatterns/behavioral/strategy"
 
 func Strategy() {
 	hero := strategy.Hero{}

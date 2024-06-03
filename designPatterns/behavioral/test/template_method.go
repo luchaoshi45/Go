@@ -1,6 +1,6 @@
 package test
 
-import "Go/behavioral/template_method"
+import "Go/designPatterns/behavioral/template_method"
 
 func TemplateMethod() {
 	mt := template_method.NewMakeTea("tea")

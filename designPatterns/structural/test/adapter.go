@@ -1,7 +1,7 @@
 package test
 
 import (
-	"Go/structural/adapter"
+	"Go/designPatterns/structural/adapter"
 	"fmt"
 )
 

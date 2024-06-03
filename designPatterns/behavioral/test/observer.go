@@ -1,7 +1,7 @@
 package test
 
 import (
-	"Go/behavioral/observer"
+	"Go/designPatterns/behavioral/observer"
 	"time"
 )
 
