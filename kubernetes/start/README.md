@@ -20,5 +20,6 @@ kubectl delete pod mynginx
 kubectl run mynginx --image nginx:1.14.2
 kubectl describe pod mynginx
 ```
+![alt text](./mynginx.png)
 
 ## 3 Deployment
