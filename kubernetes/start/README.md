@@ -120,5 +120,25 @@ kubectl set image deployment/deployment-nginx nginx=nginx:1.16.1 --record
 kubectl get deployment deployment-nginx
 kubectl describe pod deployment-nginx-595dff4fdb-v6zt5
 kubectl rollout undo deployment/deployment-nginx
-
 ```
+
+```shell
+# 在每个节点上的一个端口（由 Kubernetes 随机选择）上创建一个 NodePort Service，从而暴露你的 Deployment。
+kubectl expose deployment deployment-nginx --type=NodePort --port=80
+kubectl delete service deployment-nginx
+
+kubectl get svc
+
+node1 192.168.1.201
+service 10.97.28.153
+pod 10.244.195.154
+
+# pod
+curl 10.244.195.154:80
+# service
+curl 10.97.28.153:80
+# node
+curl 192.168.1.200:32056
+```
+
+![alt text](集群外访问service.png)
