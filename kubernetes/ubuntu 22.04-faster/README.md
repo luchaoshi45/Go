@@ -1,20 +1,21 @@
-# ubuntu 22.04 k8s docker
-
 https://www.cnblogs.com/guangdelw/p/18222715 <br>
 https://blog.csdn.net/SeeYouGoodBye/article/details/135706243 <br>
+### ubuntu 22.04 k8s docker
 
-## 一 系统初始化 🎰
+#### 一 系统初始化
 
-### 1 root
+##### 1 root
 ```shell
+#依次开机，设置ip地址，主机名
 # 设置为root登录
 sudo su
 passwd root
 ```
 
-### 2 设置静态 IP 地址
+##### 2 设置静态 IP 地址
 ```shell
-cat << EOF > /etc/netplan/00-installer-config.yaml
+vim /etc/netplan/00-installer-config.yaml
+
 network:
   version: 2
   renderer: networkd
@@ -30,23 +31,12 @@ network:
       nameservers:
         addresses:
           - 8.8.8.8
-          - 114.114.114.114
-EOF
+          - 8.8.4.4
 
 netplan apply
 ```
 
-### 3 修改主机名和 hosts
-```shell
-hostnamectl set-hostname kmaster1
-cat >> /etc/hosts << EOF
-192.168.1.200 kmaster1
-192.168.1.201 knode1
-192.168.1.202 knode2
-EOF
-```
-
-### 4 换源
+##### 3 换源
 ```shell
 vim /etc/apt/sources.list
 
@@ -64,12 +54,32 @@ deb-src http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted univers
 apt-get update
 ```
 
-### 5 关闭 swap
+##### 4 修改主机名和 hosts
+```shell
+hostnamectl set-hostname kmaster1
+hostnamectl set-hostname knode1
+hostnamectl set-hostname knode2
+cat >> /etc/hosts << EOF
+192.168.1.200 kmaster1
+192.168.1.201 knode1
+192.168.1.202 knode2
+EOF
+```
+
+##### 5 配置互信
+```shell
+ssh-keygen
+ssh-copy-id kmaster1
+ssh-copy-id knode1
+ssh-copy-id knode2
+```
+
+##### 6 关闭 swap
 ```shell
 sed -ri 's/^([^#].*swap.*)$/#\1/' /etc/fstab && grep swap /etc/fstab && swapoff -a && free -h
 ```
 
-### 6 设置内核参数
+##### 7 设置内核参数
 ```shell
 cat >> /etc/sysctl.conf <<EOF
 vm.swappiness = 0
@@ -88,17 +98,23 @@ modprobe  br_netfilter
 sysctl -p
 ```
 
-##  二 安装 k8s 组件 docker ✨
+####  k8s 组件
 
-### 1 安装 docker
+##### 1 docker
 ```shell
-# 下载 get-docker.sh
-curl -fsSL get.docker.com -o get-docker.sh
-# 安装
-sudo sh get-docker.sh --mirror Aliyun
-# 安装其他组件
+apt update
+apt install -y ca-certificates curl gnupg lsb-release
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt-get update
+
+sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo apt install apt-transport-https ca-certificates curl software-properties-common
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo apt update
+sudo apt-get update
 apt install docker-ce docker-ce-cli containerd.io docker-compose -y
-# 配置
+
 cat > /etc/docker/daemon.json <<EOF
 {
 "registry-mirrors": [
@@ -116,14 +132,16 @@ cat > /etc/docker/daemon.json <<EOF
 	}
 }
 EOF
-# 服务重启
+
 systemctl restart docker.service
 systemctl enable docker.service
 docker info
+
 ```
 
-### 2 安装 kubeadm、kubelet 和 kubectl
+##### 2 安装最新版本的kubeadm、kubelet 和 kubectl
 ```shell
+
 apt-get update && apt-get install -y apt-transport-https
 curl -fsSL https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.30/deb/Release.key |
     gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -136,7 +154,7 @@ apt-get install -y kubelet kubeadm kubectl
 systemctl enable kubelet
 ```
 
-### 3 安装 cri-dockerd
+##### 3 cri-dockerd
 Kubernetes自v1.24移除了对docker-shim的支持，而Docker Engine默认又不支持CRI规范，<br>
 因而二者将无法直接完成整合。为此，Mirantis和Docker联合创建了cri-dockerd项目，<br>
 用于为Docker Engine提供一个能够支持到CRI规范的垫片，从而能够让Kubernetes基于CRI控制Docker。
@@ -148,75 +166,106 @@ sed -ri 's@^(.*fd://).*$@\1 --pod-infra-container-image registry.aliyuncs.com/go
 systemctl daemon-reload && systemctl restart cri-docker && systemctl enable cri-docker
 ```
 
-## 三 快照 node 节点 📷
-### 1 配置 IP
-```shell
-# knode1
-cat << EOF > /etc/netplan/00-installer-config.yaml
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    ens33:
-      dhcp4: yes
-      addresses:
-        - 192.168.1.201/24
-      routes:
-        - to: 0.0.0.0/0
-          via: 192.168.1.1
-          metric: 100
-      nameservers:
-        addresses:
-          - 8.8.8.8
-          - 8.8.4.4
-EOF
-netplan apply
-
-# knode2
-cat << EOF > /etc/netplan/00-installer-config.yaml
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    ens33:
-      dhcp4: yes
-      addresses:
-        - 192.168.1.202/24
-      routes:
-        - to: 0.0.0.0/0
-          via: 192.168.1.1
-          metric: 100
-      nameservers:
-        addresses:
-          - 8.8.8.8
-          - 8.8.4.4
-EOF
-netplan apply
-```
-### 2 配置 节点 hostname
-```shell
-# knode1
-hostnamectl set-hostname knode1
-cat >> /etc/hosts << EOF
-192.168.1.200 kmaster1
-192.168.1.201 knode1
-192.168.1.202 knode2
-EOF
-
-# knode2
-hostnamectl set-hostname knode2
-cat >> /etc/hosts << EOF
-192.168.1.200 kmaster1
-192.168.1.201 knode1
-192.168.1.202 knode2
-EOF
-```
-
-#### 四 安装系统 😀
+#### 初始化
 
 ##### 主机 生成初始化配置文件
 ```shell
-# init
+kubeadm config print init-defaults > kubeadm.yaml
+vim kubeadm.yaml
+
+
+apiVersion: kubeadm.k8s.io/v1beta3
+bootstrapTokens:
+- groups:
+  - system:bootstrappers:kubeadm:default-node-token
+  token: abcdef.0123456789abcdef
+  ttl: 24h0m0s
+  usages:
+  - signing
+  - authentication
+kind: InitConfiguration
+localAPIEndpoint:
+  # 修改成本master的ip
+  advertiseAddress: 192.168.1.200
+  bindPort: 6443
+nodeRegistration:
+  # 修改成cri-dockerd的sock
+  criSocket: unix:///run/cri-dockerd.sock
+  imagePullPolicy: IfNotPresent
+  # 修改成本master的主机名
+  name: master
+  taints: null
+---
+apiServer:
+  timeoutForControlPlane: 4m0s
+apiVersion: kubeadm.k8s.io/v1beta3
+certificatesDir: /etc/kubernetes/pki
+clusterName: kubernetes
+controllerManager: {}
+dns: {}
+etcd:
+  local:
+    # 修改etcd的数据目录
+    dataDir: /data/etcd
+# 修改加速地址
+imageRepository: registry.aliyuncs.com/google_containers
+kind: ClusterConfiguration
+# 修改成具体对应的版本好
+kubernetesVersion: 1.30.1
+# 如果是多master节点，就需要添加这项，指向代理的地址，这里就设置成master的节点
+controlPlaneEndpoint: "master:6443"
+networking:
+  dnsDomain: cluster.local
+  serviceSubnet: 10.96.0.0/12
+  # 添加pod的IP地址
+  podSubnet: 10.244.0.0/16
+scheduler: {}
+# 在最后添加上下面两部分
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: ipvs
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+cgroupDriver: systemd
+
+
+kubeadm init --config=kubeadm.yaml
+
+
+systemctl stop kubelet
+systemctl stop flanneld
+systemctl stop etcd
+systemctl stop kube-apiserver
+systemctl stop kube-controller-manager
+systemctl stop kube-scheduler
+sudo kubeadm reset
+sudo kubeadm init
+sudo rm -rf /etc/kubernetes/
+sudo rm -rf /var/lib/etcd/
+
+
+kubeadm init --config=kubeadm.yaml
+
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+##### 主机 生成初始化配置文件
+```shell
+systemctl stop kubelet
+systemctl stop flanneld
+systemctl stop etcd
+systemctl stop kube-apiserver
+systemctl stop kube-controller-manager
+systemctl stop kube-scheduler
+sudo kubeadm reset
+sudo kubeadm init
+sudo rm -rf /etc/kubernetes/
+sudo rm -rf /var/lib/etcd/
+
 kubeadm init \
 --kubernetes-version=v1.30.1 \
 --image-repository registry.aliyuncs.com/google_containers \
@@ -233,26 +282,6 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 # 检查是否成功
 kubectl get nodes
 
-# 如果安装失败，运行以命令，清除安装
-systemctl stop kubelet
-systemctl stop flanneld
-systemctl stop etcd
-systemctl stop kube-apiserver
-systemctl stop kube-controller-manager
-systemctl stop kube-scheduler
-sudo kubeadm reset
-sudo kubeadm init
-sudo rm -rf /etc/kubernetes/
-sudo rm -rf /var/lib/etcd/
-rm -rf /etc/cni/net.d
-rm -rf /var/lib/cni/
-rm -rf /var/lib/kubelet/*
-iptables -F
-iptables -t nat -F
-iptables -t mangle -F
-iptables -X
-rm -rf /var/lib/etcd
-
 ```
 
 ##### node join
@@ -262,29 +291,26 @@ kubeadm token create --print-join-command
 
 # 从机
 kubeadm join 192.168.1.200:6443 \
---token 6shoik.kvtd8i2lm4iuq6eb \
---discovery-token-ca-cert-hash sha256:a6f7da1c8e085b7fb4b065faca88894690984d247d9d83157c2c1f04fba78901 \
+--token oga6a9.rj3c68vib60ljqnb \
+--discovery-token-ca-cert-hash sha256:61fd2fd1afe24ae90b177d1a93963fc6dcd53b90a0b0848c4e52c532febca40d \
 --cri-socket unix:///run/cri-dockerd.sock
---ignore-preflight-errors=all
 
 kubectl get nodes
 kubectl get cs
 ```
 
-##### 安装 pod 网络calico
+##### 安装pod网络calico
 ```shell
 wget https://docs.projectcalico.org/manifests/calico.yaml
 vim calico.yaml 
 
 # 修改 4061 行为 pod 子网地址
 - name: CALICO_IPV4POOL_CIDR
-  value: "10.24.0.0/16"
+  value: "10.244.0.0/16"
   
 kubectl apply -f calico.yaml
-kubectl delete -f calico.yaml
 
-
-kubectl get pods --all-namespaces -o wide
+watch kubectl get pods --all-namespaces -o wide
 kubectl get nodes
 kubectl get cs
 
