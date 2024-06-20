@@ -1,6 +1,9 @@
 # ubuntu 22.04 k8s docker
-https://www.cnblogs.com/guangdelw/p/18222715 <br>
-https://blog.csdn.net/SeeYouGoodBye/article/details/135706243 <br>
+### https://www.cnblogs.com/guangdelw/p/18222715 <br>
+### https://blog.csdn.net/SeeYouGoodBye/article/details/135706243 <br>
+<img src="./框图.png" alt="Image" style="width: 500px;"> <br>
+<br>
+<img src="kubeadm kubelet kubectl.png" alt="Image" style="width: 1100px;"> <br>
 
 ## 一 系统初始化 🎰
 
@@ -203,8 +206,12 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # 检查是否成功
 kubectl get nodes
+```
+
+<img src="./k8s安装成功.png" alt="Image" style="width: 800px;">
 
 
+```shell
 # 删除重装 😭
 systemctl stop kubelet
 systemctl stop flanneld

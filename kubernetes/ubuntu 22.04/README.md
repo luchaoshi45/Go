@@ -1,7 +1,11 @@
 # ubuntu 22.04 k8s docker
 
-https://www.cnblogs.com/guangdelw/p/18222715 <br>
-https://blog.csdn.net/SeeYouGoodBye/article/details/135706243 <br>
+### https://www.cnblogs.com/guangdelw/p/18222715
+### https://blog.csdn.net/SeeYouGoodBye/article/details/135706243
+
+<img src="./框图.png" alt="Image" style="width: 500px;"> <br>
+<br>
+<img src="kubeadm kubelet kubectl.png" alt="Image" style="width: 1100px;"> <br>
 
 ## 一 系统初始化 🎰
 
@@ -95,13 +99,11 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docke
 apt-get update
 apt install docker-ce docker-ce-cli containerd.io docker-compose -y
 
-cat > /etc/docker/daemon.json <<EOF
+cat  << EOF > /etc/docker/daemon.json
 {
 "registry-mirrors": [
-"https://docker.mirrors.ustc.edu.cn",
-"https://hub-mirror.c.163.com",
-"https://reg-mirror.qiniu.com",
-"https://registry.docker-cn.com"
+"https://docker.m.daocloud.io",
+"https://index.docker.io/v1"
 ],
  "exec-opts": ["native.cgroupdriver=systemd"],
  "data-root": "/data/docker",
@@ -112,7 +114,7 @@ cat > /etc/docker/daemon.json <<EOF
 	}
 }
 EOF
-systemctl restart docker.service
+systemctl daemon-reload && systemctl restart docker
 systemctl enable docker.service
 docker info
 ```
