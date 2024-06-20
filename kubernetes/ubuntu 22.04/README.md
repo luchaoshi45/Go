@@ -23,10 +23,7 @@ network:
       dhcp4: yes
       addresses:
         - 192.168.1.200/24
-      routes:
-        - to: 0.0.0.0/0
-          via: 192.168.1.1
-          metric: 100
+      gateway4: 192.168.1.1  # 替换为你的网关地址
       nameservers:
         addresses:
           - 8.8.8.8
@@ -48,8 +45,7 @@ EOF
 
 ### 4 换源
 ```shell
-vim /etc/apt/sources.list
-
+cat << EOF > /etc/apt/sources.list
 deb http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse
 deb http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse
 deb http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
@@ -60,6 +56,7 @@ deb-src http://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multive
 deb-src http://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
 deb-src http://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse
+EOF
 
 apt-get update
 ```
@@ -92,13 +89,12 @@ sysctl -p
 
 ### 1 安装 docker
 ```shell
-# 下载 get-docker.sh
-curl -fsSL get.docker.com -o get-docker.sh
-# 安装
-sudo sh get-docker.sh --mirror Aliyun
-# 安装其他组件
+apt install -y ca-certificates curl gnupg lsb-release
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+apt-get update
 apt install docker-ce docker-ce-cli containerd.io docker-compose -y
-# 配置
+
 cat > /etc/docker/daemon.json <<EOF
 {
 "registry-mirrors": [
@@ -116,7 +112,6 @@ cat > /etc/docker/daemon.json <<EOF
 	}
 }
 EOF
-# 服务重启
 systemctl restart docker.service
 systemctl enable docker.service
 docker info
@@ -262,9 +257,10 @@ kubeadm token create --print-join-command
 
 # 从机
 kubeadm join 192.168.1.200:6443 \
---token 6shoik.kvtd8i2lm4iuq6eb \
---discovery-token-ca-cert-hash sha256:a6f7da1c8e085b7fb4b065faca88894690984d247d9d83157c2c1f04fba78901 \
+--token 7q8yux.63bc6z3c2575lmuw \
+--discovery-token-ca-cert-hash sha256:1fb72aa14e6071a51a5dacaebaf317212dc28e7f60a10f6284b5ff6876f25de6\
 --cri-socket unix:///run/cri-dockerd.sock
+
 --ignore-preflight-errors=all
 
 kubectl get nodes
