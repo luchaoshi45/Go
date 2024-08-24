@@ -8,6 +8,8 @@
 ```shell
 sudo su
 passwd root
+systemctl stop ufw
+systemctl disable ufw
 apt update
 apt install net-tools
 apt install openssh-server
@@ -93,7 +95,7 @@ sysctl -p
 
 ##  二 安装 k8s 组件 ✨
 
-### 安装containerd
+### 1 安装 containerd
 ```shell
 sudo apt install -y containerd
 
@@ -128,7 +130,7 @@ systemctl daemon-reload
 systemctl restart containerd
 ```
 
-### 安装工具
+### 2 安装 kubelet、kubeadm 和 kubectl
 ```shell
 # 更新 apt 依赖
 sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gpg
