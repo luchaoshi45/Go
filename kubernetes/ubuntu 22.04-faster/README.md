@@ -15,7 +15,7 @@ apt update
 apt install net-tools
 apt install openssh-server
 sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
-systemctl start ssh
+systemctl restart ssh
 systemctl enable ssh
 ```
 
