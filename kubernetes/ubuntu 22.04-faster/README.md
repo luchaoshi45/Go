@@ -14,6 +14,18 @@ sudo su
 passwd root
 ```
 
+### 1 base
+```shell
+sudo su
+passwd root
+apt update
+apt install net-tools
+apt install openssh-server
+sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
+systemctl start ssh
+systemctl enable ssh
+```
+
 ### 2 设置静态 IP 地址
 ```shell
 vim /etc/netplan/00-installer-config.yaml
