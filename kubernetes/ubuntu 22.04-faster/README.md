@@ -7,13 +7,6 @@
 
 ## 一 系统初始化 🎰
 
-### 1 root
-```shell
-# 设置为root登录
-sudo su
-passwd root
-```
-
 ### 1 base
 ```shell
 sudo su
@@ -28,8 +21,7 @@ systemctl enable ssh
 
 ### 2 设置静态 IP 地址
 ```shell
-vim /etc/netplan/00-installer-config.yaml
-
+cat >> /etc/netplan/00-installer-config.yaml << EOF
 network:
   version: 2
   renderer: networkd
@@ -46,6 +38,7 @@ network:
         addresses:
           - 8.8.8.8
           - 8.8.4.4
+EOF
 
 netplan apply
 ```
