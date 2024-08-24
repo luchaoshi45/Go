@@ -1,9 +1,6 @@
 # ubuntu 22.04 k8s docker
 ### https://www.cnblogs.com/guangdelw/p/18222715 <br>
 ### https://blog.csdn.net/SeeYouGoodBye/article/details/135706243 <br>
-<img src="./框图.png" alt="Image" style="width: 500px;"> <br>
-<br>
-<img src="kubeadm kubelet kubectl.png" alt="Image" style="width: 1100px;"> <br>
 
 ## 一 系统初始化 🎰
 
@@ -96,67 +93,6 @@ sysctl -p
 
 ##  二 安装 k8s 组件 ✨
 
-### 1 docker
-```shell
-apt update
-apt install -y ca-certificates curl gnupg lsb-release
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-apt-get update
-
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-sudo apt install apt-transport-https ca-certificates curl software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo apt update
-sudo apt-get update
-apt install docker-ce docker-ce-cli containerd.io docker-compose -y
-
-cat  << EOF > /etc/docker/daemon.json
-{
-"registry-mirrors": [
-"https://docker.m.daocloud.io",
-"https://index.docker.io/v1"
-],
- "exec-opts": ["native.cgroupdriver=systemd"],
- "data-root": "/data/docker",
- "log-driver": "json-file",
- "log-opts": {
-	 "max-size": "20m",
-	 "max-file": "5"
-	}
-}
-EOF
-systemctl daemon-reload && systemctl restart docker
-systemctl enable docker.service
-docker info
-```
-
-### 2 安装最新版本的kubeadm、kubelet 和 kubectl
-```shell
-apt-get update && apt-get install -y apt-transport-https
-curl -fsSL https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.30/deb/Release.key |
-    gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.aliyun.com/kubernetes-new/core/stable/v1.30/deb/ /" |
-    tee /etc/apt/sources.list.d/kubernetes.list
-    
-apt-get update
-apt-get install -y kubelet kubeadm kubectl
-
-systemctl enable kubelet
-```
-
-### 3 cri-dockerd
-Kubernetes自v1.24移除了对docker-shim的支持，而Docker Engine默认又不支持CRI规范，<br>
-因而二者将无法直接完成整合。为此，Mirantis和Docker联合创建了cri-dockerd项目，<br>
-用于为Docker Engine提供一个能够支持到CRI规范的垫片，从而能够让Kubernetes基于CRI控制Docker。
-```shell
-wget https://github.com/Mirantis/cri-dockerd/releases/download/v0.3.14/cri-dockerd_0.3.14.3-0.ubuntu-jammy_amd64.deb
-dpkg -i ./cri-dockerd_0.3.14.3-0.ubuntu-jammy_amd64.deb
-
-sed -ri 's@^(.*fd://).*$@\1 --pod-infra-container-image registry.aliyuncs.com/google_containers/pause@' /usr/lib/systemd/system/cri-docker.service
-systemctl daemon-reload && systemctl restart cri-docker && systemctl enable cri-docker
-```
-
 ### 安装containerd
 ```shell
 sudo apt install -y containerd
@@ -174,6 +110,22 @@ sudo cat /etc/containerd/config.toml | grep sandbox_image
 
 # 重启containerd
 systemctl restart containerd.service
+
+
+# 创建 containerd.service.d 目录
+mkdir /etc/systemd/system/containerd.service.d/
+
+# 创建或编辑文件
+cat > /etc/systemd/system/containerd.service.d/http-proxy.conf <<-EOF
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:7897"
+Environment="HTTPS_PROXY=http://127.0.0.1:7897"
+Environment="NO_PROXY=noproxy_address>"
+EOF
+
+# 重启containerd
+systemctl daemon-reload
+systemctl restart containerd
 ```
 
 ### 安装工具
@@ -227,6 +179,7 @@ network:
           - 8.8.8.8
           - 8.8.4.4
 EOF
+
 netplan apply
 ```
 ### 2 配置 节点 hostname
@@ -236,7 +189,6 @@ hostnamectl set-hostname knode1
 cat >> /etc/hosts << EOF
 192.168.1.200 kmaster1
 192.168.1.201 knode1
-192.168.1.202 knode2
 EOF
 ```
 
@@ -245,13 +197,11 @@ EOF
 ### 主机 生成初始化配置文件
 ```shell
 kubeadm init \
---kubernetes-version=v1.30.1 \
+--kubernetes-version=v1.27.6 \
 --image-repository registry.aliyuncs.com/google_containers \
---pod-network-cidr=10.24.0.0/16 \
+--pod-network-cidr=10.244.0.0/16 \
 --ignore-preflight-errors=Swap \
---cri-socket unix:///run/cri-dockerd.sock \
 --v=10
-
 
 mkdir -p $HOME/.kube
 sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
@@ -292,31 +242,15 @@ rm -rf /var/lib/etcd
 kubeadm token create --print-join-command
 
 # 从机
-kubeadm join 192.168.1.200:6443 \
---token 0gnn65.y8m0oii9hfw9lo1h \
---discovery-token-ca-cert-hash sha256:69e9c722de52eae210064a0a939d12c02440b3ede890de92abcd6b27083999ae \
---cri-socket unix:///run/cri-dockerd.sock
+kubeadm join 192.168.1.200:6443 --token tk1bme.fu50ljfd97u4k920 --discovery-token-ca-cert-hash sha256:b4401951ee9aaf8f8c4c1b13aaa779950875f0e64e4d57060c7f80b2500a8814
 
 kubectl get nodes
 kubectl get cs
 ```
 
-### 安装 calico
+### 安装 flannel
 ```shell
-wget https://docs.projectcalico.org/manifests/calico.yaml
-vim calico.yaml 
-
-# 修改 4061 行为 pod 子网地址
-- name: CALICO_IPV4POOL_CIDR
-  value: "10.24.0.0/16"
-  
-kubectl apply -f calico.yaml
-
-watch kubectl get pods --all-namespaces -o wide
-kubectl get nodes
-kubectl get cs
-
-kubectl run busybox --image busybox:1.28 --restart=Never --rm -it busybox -- sh
-# 输入 nslookup kubernetes.default.svc.cluster.local
-# 退出 exit
+ctr image pull docker.io/flannel/flannel:v0.25.5
+ctr image pull docker.io/flannel/flannel-cni-plugin:v1.5.1-flannel1
+kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/kube-flannel.yml
 ```
