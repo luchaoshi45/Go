@@ -157,6 +157,54 @@ sed -ri 's@^(.*fd://).*$@\1 --pod-infra-container-image registry.aliyuncs.com/go
 systemctl daemon-reload && systemctl restart cri-docker && systemctl enable cri-docker
 ```
 
+### 安装containerd
+```shell
+sudo apt install -y containerd
+
+# 生成containetd的配置文件
+sudo mkdir -p /etc/containerd/
+containerd config default | sudo tee /etc/containerd/config.toml >/dev/null 2>&1
+# 修改/etc/containerd/config.toml，修改SystemdCgroup为true
+sudo sed -i "s#SystemdCgroup\ \=\ false#SystemdCgroup\ \=\ true#g" /etc/containerd/config.toml
+sudo cat /etc/containerd/config.toml | grep SystemdCgroup
+
+# 修改沙箱镜像源
+sudo sed -i "s#registry.k8s.io/pause#registry.cn-hangzhou.aliyuncs.com/google_containers/pause#g" /etc/containerd/config.toml
+sudo cat /etc/containerd/config.toml | grep sandbox_image
+
+# 重启containerd
+systemctl restart containerd.service
+```
+
+### 安装工具
+```shell
+# 更新 apt 依赖
+sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl gpg
+
+# 添加 Kubernetes 的 key
+curl -fsSL https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+# 添加 Kubernetes apt 仓库，使用阿里云镜像源
+echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://mirrors.aliyun.com/kubernetes/apt/ kubernetes-xenial main' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+# 更新 apt 索引
+sudo apt update
+
+# 查看版本列表
+apt-cache madison kubeadm
+
+# 安装 1.27.6 版本的 kubelet、kubeadm 和 kubectl
+sudo apt-get install -y kubelet=1.27.6-00 kubeadm=1.27.6-00 kubectl=1.27.6-00
+
+# 锁定版本，不随 apt upgrade 更新
+sudo apt-mark hold kubelet kubeadm kubectl
+
+# kubectl 命令补全
+sudo apt install -y bash-completion
+kubectl completion bash | sudo tee /etc/profile.d/kubectl_completion.sh > /dev/null
+. /etc/profile.d/kubectl_completion.sh
+```
+
 ## 三 快照 node 节点 📷
 ### 1 配置 IP
 ```shell
