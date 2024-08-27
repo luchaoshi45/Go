@@ -15,6 +15,7 @@ systemctl disable ufw
 apt update
 apt install net-tools
 apt install openssh-server
+apt install vim
 sed -i 's/^#\?PermitRootLogin .*/PermitRootLogin yes/' /etc/ssh/sshd_config
 systemctl restart ssh
 systemctl enable ssh
@@ -22,23 +23,26 @@ systemctl enable ssh
 
 ### 2 设置静态 IP 地址
 ```shell
-cat >> /etc/netplan/00-installer-config.yaml << EOF
+cat > /etc/netplan/00-installer-config.yaml << EOF
 network:
-  version: 2
-  renderer: networkd
   ethernets:
     ens33:
-      dhcp4: yes
+      dhcp4: no
+      dhcp6: no
       addresses:
         - 192.168.1.200/24
       routes:
-        - to: 0.0.0.0/0
+        - to: default
           via: 192.168.1.1
-          metric: 100
       nameservers:
         addresses:
+          - 114.114.114.114
           - 8.8.8.8
           - 8.8.4.4
+          - 10.6.39.2
+          - 10.6.39.3
+  version: 2
+  renderer: networkd
 EOF
 
 netplan apply
@@ -97,7 +101,7 @@ sysctl -p
 
 ##  二 安装 k8s 组件 ✨
 
-### 1 安装 containerd
+### 1 安装 containerd docker
 ```shell
 apt update
 apt install -y ca-certificates curl gnupg lsb-release
@@ -188,10 +192,11 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 
 # 检查是否成功
 kubectl get nodes
+kubectl get cs
 ```
 
+### 2 删除重装😭
 ```shell
-# 删除重装 😭
 systemctl stop kubelet
 systemctl stop flanneld
 systemctl stop etcd
@@ -212,19 +217,6 @@ iptables -X
 rm -rf /var/lib/etcd
 ```
 
-### 2 node join
-```shell
-# 主机 生成 token
-kubeadm token create --print-join-command
-
-# 从机
-kubeadm join 192.168.1.200:6443 --token tk1bme.fu50ljfd97u4k920 --discovery-token-ca-cert-hash sha256:b4401951ee9aaf8f8c4c1b13aaa779950875f0e64e4d57060c7f80b2500a8814 \
---cri-socket unix:///run/cri-dockerd.sock
-
-kubectl get nodes
-kubectl get cs
-```
-
 ### 3 安装 flannel
 ```shell
 docker image pull docker.io/flannel/flannel:v0.25.5
@@ -237,11 +229,6 @@ kubectl apply -f https://github.com/flannel-io/flannel/releases/latest/download/
 kubectl describe node kmaster1 |grep Taints
 kubectl taint nodes kmaster1 node-role.kubernetes.io/control-plane:NoSchedule-
 
-vi /etc/kubernetes/manifests/kube-apiserver.yaml
-
-# 在spec.containers.command的最后面加上
-# - --service-node-port-range=1-65535
-
 # 重启
 systemctl daemon-reload
 systemctl restart kubelet
@@ -249,14 +236,22 @@ systemctl restart kubelet
 
 ### 4 部署 metallb
 ```shell
-kubectl edit configmap -n kube-system kube-proxy
+# kubectl edit configmap -n kube-system kube-proxy
 # strictARP: true
 # mode: "ipvs"
+# kubectl rollout restart daemonset kube-proxy -n kube-system
 
-kubectl rollout restart daemonset kube-proxy -n kube-system
+kubectl -n kube-system patch configmap kube-proxy --type merge --patch '{
+  "data": {
+    "config.conf": "apiVersion: kubeproxy.config.k8s.io/v1alpha1\nbindAddress: 0.0.0.0\nbindAddressHardFail: false\nclientConnection:\n  acceptContentTypes: \"\"\n  burst: 0\n  contentType: \"\"\n  kubeconfig: /var/lib/kube-proxy/kubeconfig.conf\n  qps: 0\nclusterCIDR: 10.244.0.0/16\nconfigSyncPeriod: 0s\nconntrack:\n  maxPerCore: null\n  min: null\n  tcpCloseWaitTimeout: null\n  tcpEstablishedTimeout: null\ndetectLocal:\n  bridgeInterface: \"\"\n  interfaceNamePrefix: \"\"\ndetectLocalMode: \"\"\nenableProfiling: false\nhealthzBindAddress: \"\"\nhostnameOverride: \"\"\niptables:\n  localhostNodePorts: null\n  masqueradeAll: false\n  masqueradeBit: null\n  minSyncPeriod: 0s\n  syncPeriod: 0s\nipvs:\n  excludeCIDRs: null\n  minSyncPeriod: 0s\n  scheduler: \"\"\n  strictARP: true\n  syncPeriod: 0s\n  tcpFinTimeout: 0s\n  tcpTimeout: 0s\n  udpTimeout: 0s\nkind: KubeProxyConfiguration\nmetricsBindAddress: \"\"\nmode: \"ipvs\"\nnodePortAddresses: null\noomScoreAdj: null\nportRange: \"\"\nshowHiddenMetricsForVersion: \"\"\nwinkernel:\n  enableDSR: false\n  forwardHealthCheckVip: false\n  networkName: \"\"\n  rootHnsEndpointName: \"\"\n  sourceVip: \"\"\n"
+  }
+}'
 
+kubectl delete pods -n kube-system -l k8s-app=kube-proxy
+```
+
+```shell
 wget https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml
-wget https://raw.githubusercontent.com/metallb/metallb/v0.14.5/config/manifests/metallb-native.yaml
 kubectl apply -f metallb-native.yaml
 
 cat << EOF > ip-pool.yaml
@@ -288,8 +283,9 @@ kubectl apply -f advertise.yaml
 
 kubectl get ipaddresspool -n metallb-system
 ```
+
+### 5 测试机器
 ```shell
-# 测试机器ok
 cat << EOF > test_metallb.yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -325,6 +321,9 @@ spec:
 EOF
 
 kubectl apply -f test_metallb.yaml
+```
 
+```shell
+# http://192.168.1.210/
 kubectl delete -f test_metallb.yaml
 ```
