@@ -24,14 +24,14 @@
     + **将 `sound-equipment-fault-detection` 的代码置于已经更新到最新的 `master` 分支的最新代码之后**：`git rebase master`，如下图所示：
         <img src="https://www.atlassian.com/dam/jcr:5b153a22-38be-40d0-aec8-5f2fffc771e5/03.svg" width="600px">
 
-5. 向 Github 上自己的 fork 项目 `YimianDai/gluon-cv` 的分支 `origin` 提交自己的修改，因为 Pull Request 是将两个 Github 上的 repo 比较，所以一定要将本地的修改先推送到自己的 fork repo 上，`git push origin sound-equipment-fault-detection:sound-equipment-fault-detection`，参看 Ref. 4
+5. 向 Github 上自己的 fork 项目 `kubeedge/examples` 的分支 `origin` 提交自己的修改，因为 Pull Request 是将两个 Github 上的 repo 比较，所以一定要将本地的修改先推送到自己的 fork repo 上，`git push origin sound-equipment-fault-detection:sound-equipment-fault-detection`，参看 Ref. 4
    
 
 
 ### Part 3 - Pull Request 
 
 1. 提交 issue：描述发现的 Bug，这个可以作为对自己后面 Pull Request 的描述
-2. 是在自己 Fork 的项目界面，即 YimianDai/gluon-cv 的 Pull requests 的 Tab 中点击 New pull request，后面会自动跳到 dmlc/gluon-cv 的界面，如下所示：
+2. 是在自己 Fork 的项目界面，即 kubeedge/examples 的 Pull requests 的 Tab 中点击 New pull request，后面会自动跳到 dmlc/gluon-cv 的界面，如下所示：
 
     <img src="https://raw.githubusercontent.com/YimianDai/images/master/Pull-PR-Empty.png" width="700px">
 
@@ -43,7 +43,6 @@
 1. 查看当前是哪个分支？在工作目录下, 
 ```shell
 cat .git/HEAD
-# ref: refs/heads/fixMixSoftmaxCrossEntropyLoss
 ```
 2. 关于 `git rebase` 非常好的一篇文章，[Merging vs. Rebasing](https://www.atlassian.com/git/tutorials/merging-vs-rebasing)
 3. [向 github 的开源项目提交 PR 的步骤](https://blog.csdn.net/u010857876/article/details/79035876)
