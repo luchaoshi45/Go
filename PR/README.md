@@ -1,5 +1,5 @@
 
-## 步骤
+# 如何提交PR到GitHub
 
 ### Part 1 - Local Repo Config 
 
