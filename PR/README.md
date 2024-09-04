@@ -40,10 +40,12 @@
 <br> `git push --force-with-lease origin sound-equipment-fault-detection`
 ## Reference
 
-1. 查看当前是哪个分支？在工作目录下, 
+查看当前是哪个分支？在工作目录下, 
 ```shell
 cat .git/HEAD
 ```
+
+1. https://gist.github.com/YimianDai/7dcf6340fc435323a328634df0666f5e
 2. 关于 `git rebase` 非常好的一篇文章，[Merging vs. Rebasing](https://www.atlassian.com/git/tutorials/merging-vs-rebasing)
 3. [向 github 的开源项目提交 PR 的步骤](https://blog.csdn.net/u010857876/article/details/79035876)
 4. [GIT: PUSHING TO A REMOTE BRANCH WITH A DIFFERENT NAME](https://penandpants.com/2013/02/07/git-pushing-to-a-remote-branch-with-a-different-name/)
