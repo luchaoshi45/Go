@@ -1,7 +1,9 @@
 package main
 
-import "Go/designPatterns/behavioral/test"
+import (
+	"Go/algorithm"
+)
 
 func main() {
-	test.Test()
+	algorithm.DoubleLink()
 }
