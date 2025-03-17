@@ -1,9 +1,7 @@
 package main
 
-import (
-	"Go/algorithm"
-)
+import "Go/algorithm"
 
 func main() {
-	algorithm.DoubleLink()
+	algorithm.TestSort()
 }
