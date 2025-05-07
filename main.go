@@ -3,5 +3,5 @@ package main
 import "Go/algorithm"
 
 func main() {
-	algorithm.TestSort()
+	algorithm.TestScheduleTasks()
 }
