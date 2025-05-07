@@ -1,7 +1,7 @@
 package main
 
-import "Go/algorithm"
+import "Go/syntax"
 
 func main() {
-	algorithm.TestScheduleTasks()
+	syntax.Chan()
 }
